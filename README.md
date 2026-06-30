@@ -65,5 +65,3 @@ The .github/workflows/ui-tests.yml automates the testing lifecycle:
 3. Executes Tests in Headless Mode against the target environment.
 4. Generates and Uploads Allure Reports directly to the GitHub Action run summary as a downloadable .zip artifact.
 
----
-Created by [Your Name] - Senior QA Automation Architect.
