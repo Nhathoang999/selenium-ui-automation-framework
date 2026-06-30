@@ -1,0 +1,57 @@
+name: Selenium UI Automation Tests
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  schedule:
+    - cron: '0 2 * * *' # Nightly Regression Run at 2:00 AM UTC
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions UI
+
+jobs:
+  test:
+    name: Execute Tests & Generate Reports
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: ☕ Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: 'maven' # Speeds up execution by caching Maven dependencies
+
+    - name: 🧪 Run UI Tests via Maven
+      # Headless mode should be configured in DriverFactory.java when running on Linux servers
+      run: mvn clean test -DsuiteXmlFile=src/test/resources/suites/testng.xml -Dbrowser=chrome
+      continue-on-error: true # CRITICAL: Continue to reporting steps even if tests fail
+
+    - name: 📊 Generate Allure Report
+      uses: simple-elf/allure-report-action@master
+      if: always()
+      id: allure-report
+      with:
+        allure_results: allure-results
+        gh_pages: gh-pages
+        allure_report: allure-report
+        allure_history: allure-history
+
+    - name: 📦 Upload Allure HTML Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-html-report
+        path: allure-report/
+        retention-days: 14 # Keeps artifacts available for 2 weeks
+
+    - name: 📦 Upload Surefire XML Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: surefire-reports
+        path: target/surefire-reports/
+        retention-days: 14
